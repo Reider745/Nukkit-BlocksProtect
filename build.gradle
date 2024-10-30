@@ -1,0 +1,48 @@
+apply plugin: 'java'
+
+group = 'org.reider745'
+version = '1.0'
+
+repositories {
+    mavenCentral()
+    maven {
+        url = "https://jitpack.io"
+    }
+}
+
+dependencies {
+    compileOnly files("target/server.jar")
+    compileOnly files("target/plugins/JOOQConnector-Nukkit-1.0.1.jar")
+}
+
+test {
+    dependencies {
+        implementation 'com.github.MEFRREEX:JOOQConnector:1.0.1'
+    }
+}
+
+def targetJavaVersion = 17
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+
+    withSourcesJar()
+}
+
+task buildjar(type: Jar) {
+    destinationDirectory = file('target/plugins')
+    from sourceSets.main.output
+}
+
+task runJar(dependsOn: buildjar, type: JavaExec) {
+    main = '-jar'
+    args "server.jar"
+    jvmArgs("--add-opens", "java.base/jdk.internal.loader=ALL-UNNAMED")
+    classpath = sourceSets.main.runtimeClasspath
+    standardInput = System.in
+    workingDir = "target"
+}
+
+defaultTasks 'runJar'
