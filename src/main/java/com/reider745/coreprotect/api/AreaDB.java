@@ -1,6 +1,8 @@
 package com.reider745.coreprotect.api;
 
 import com.mefrreex.jooq.database.IDatabase;
+import com.reider745.coreprotect.api.description.BaseBlockInfo;
+import com.reider745.coreprotect.api.description.parser.BaseParserBlockInfo;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
@@ -8,6 +10,8 @@ import org.jooq.impl.SQLDataType;
 
 import java.nio.ByteBuffer;
 import java.sql.Connection;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.concurrent.CompletableFuture;
 
 public class AreaDB {
@@ -54,62 +58,65 @@ public class AreaDB {
                 .execute();
     }
 
-    protected void addInteraction(Connection connection, byte x, byte y, byte z, byte type, String player){
+    protected void addInteraction(Connection connection, byte x, byte y, byte z, byte type, String player, short beforeBlock, short afterBlock){
         final DSLContext context = DSL.using(connection);
 
         final byte[] pos = new byte[]{x, y, z};
         final byte[] bytes = getInteractionOrCreate(context, pos);
-        int length = bytes.length;
+        final BaseParserBlockInfo parser = BaseBlockInfo.getParserForType(type);
+        final int length = bytes.length;
 
-        final ByteBuffer buffer = ByteBuffer.allocate(length + 8 + 1 + 1 + player.length());
+        final ByteBuffer buffer = ByteBuffer.allocate(length + parser.length(player));
         buffer.put(bytes);
 
-        int size = buffer.getInt(0);
-        buffer.putInt(0, size + 1);
-
-        buffer.putLong(length, System.currentTimeMillis());
-        length += 8;
-        buffer.put(length, type);
-        length += 1;
-        buffer.put(length, (byte) (player.length() + Byte.MIN_VALUE));
-        length += 1;
-
-        for(byte symbol : player.getBytes()){
-            buffer.put(length, symbol);
-            length += 1;
-        }
+        parser.encode(buffer, length, type, player, beforeBlock, afterBlock);
 
         setInteractions(context, pos, buffer.array());
     }
 
-    public void addInteractionAsync(byte x, byte y, byte z, byte type, String player) {
-        connection.thenAcceptAsync(connection -> addInteraction(connection, x, y, z, type, player));
+    public void addInteractionAsync(byte x, byte y, byte z, byte type, String player, short beforeBlock, short afterBlock) {
+        connection.thenAcceptAsync(connection -> addInteraction(connection, x, y, z, type, player, beforeBlock, afterBlock));
     }
 
-    public void addInteraction(byte x, byte y, byte z, byte type, String player) {
-        connection.thenAccept(connection -> addInteraction(connection, x, y, z, type, player));
+    public void addInteraction(byte x, byte y, byte z, byte type, String player, short beforeBlock, short afterBlock) {
+        connection.thenAccept(connection -> addInteraction(connection, x, y, z, type, player, beforeBlock, afterBlock));
     }
 
-    protected BlockInteractionPlayerInfo[] getInteractions(Connection connection, byte x, byte y, byte z){
+    protected BaseBlockInfo[] getInteractions(Connection connection, byte x, byte y, byte z){
         final ByteBuffer buffer = ByteBuffer.wrap(getInteractionOrCreate(DSL.using(connection), new byte[]{x, y, z}));
-        final BlockInteractionPlayerInfo[] list = new BlockInteractionPlayerInfo[buffer.getInt()];
+        final BaseBlockInfo[] list = new BaseBlockInfo[buffer.getInt()];
 
         for(int i = 0;i < list.length;i++){
-            list[i] = new BlockInteractionPlayerInfo(buffer);
+            final byte type = buffer.get();
+            list[i] = BaseBlockInfo.getParserForType(type).decode(buffer, type);
         }
 
         return list;
     }
 
-    public BlockInteractionPlayerInfo[] getInteractionsAsync(byte x, byte y, byte z){
+    public BaseBlockInfo[] getInteractionsAsync(byte x, byte y, byte z){
         return connection.thenApplyAsync(connection -> getInteractions(connection, x, y, z)).join();
     }
 
-    public BlockInteractionPlayerInfo[] getInteractions(byte x, byte y, byte z){
+    public BaseBlockInfo[] getInteractions(byte x, byte y, byte z){
         return connection.thenApply(connection -> getInteractions(connection, x, y, z)).join();
     }
 
-    public void unload() {
+    public BaseBlockInfo[] getAllInteractions() {
+        return connection.thenApply((connection -> {
+            final Result<Record> blocks =  DSL.using(connection).select()
+                    .from(table)
+                    .fetch();
+            final ArrayList<BaseBlockInfo> list = new ArrayList<>();
 
+            for(Record record : blocks) {
+                final byte[] pos = record.get(POS, byte[].class);
+                list.addAll(Arrays.asList(getInteractions(connection, pos[0], pos[1], pos[2])));
+            }
+
+            return list.toArray(new BaseBlockInfo[0]);
+        })).join();
     }
+
+    public void unload() {}
 }

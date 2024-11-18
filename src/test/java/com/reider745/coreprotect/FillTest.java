@@ -16,14 +16,14 @@ public class FillTest {
 
         final LevelDB levelDB = new LevelDB(new File("speed_test.db"));
 
-        levelDB.addInteraction(0, 0, 0, PlayerInteractionType.BREAK, "test");
-        levelDB.addInteraction(16, 16, 16, PlayerInteractionType.BREAK, "test");
+        levelDB.addInteraction(0, 0, 0, PlayerInteractionType.BREAK, "test", 0, 0);
+        levelDB.addInteraction(16, 16, 16, PlayerInteractionType.BREAK, "test", 0, 0);
 
         System.out.println(Arrays.toString(levelDB.getInteractions(0, 0, 0)));
 
         System.out.println("Start test speed");
 
-        final int FILL_DB = 1_000;
+        final int FILL_DB = 10_000;
         final int PERCENT = FILL_DB / 100;
         final Random random = new Random();
 
@@ -38,9 +38,12 @@ public class FillTest {
                     -512 + random.nextInt(1024),
                     -512 + random.nextInt(1024),
                     -512 + random.nextInt(1024),
-                    PlayerInteractionType.BREAK, "test"
+                    PlayerInteractionType.BREAK, "test",
+                    0, 0
             );
         }
+
+        levelDB.unload();
 
         System.out.println("End fill db, time: "+(System.currentTimeMillis() - start));
     }

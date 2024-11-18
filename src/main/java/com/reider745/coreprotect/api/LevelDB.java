@@ -3,6 +3,7 @@ package com.reider745.coreprotect.api;
 import cn.nukkit.Player;
 import cn.nukkit.level.Position;
 import com.mefrreex.jooq.database.SQLiteDatabase;
+import com.reider745.coreprotect.api.description.BaseBlockInfo;
 import org.jooq.impl.DSL;
 
 import java.io.File;
@@ -27,35 +28,37 @@ public class LevelDB {
         return ares.computeIfAbsent(hashPosition(areaPosX, areaPosZ), k -> new AreaDB(this.database, DSL.table(("area"+areaPosX+"_"+areaPosZ).replaceAll("-", "m"))));
     }
 
-    public void addInteraction(int x, int y, int z, PlayerInteractionType type, String player){
-        getAreaAt(x, z).addInteraction((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE), (byte) type.ordinal(), player);
+    public void addInteraction(int x, int y, int z, PlayerInteractionType type, String player, int beforeBlock, int afterBlock){
+        getAreaAt(x, z).addInteraction((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE),
+                (byte) type.ordinal(), player, (short) beforeBlock, (short) afterBlock);
     }
 
-    public void addInteraction(Position position, PlayerInteractionType type, Player player){
-        addInteraction((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName());
+    public void addInteraction(Position position, PlayerInteractionType type, Player player, int beforeBlock, int afterBlock){
+        addInteraction((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName(), beforeBlock, afterBlock);
     }
 
-    public BlockInteractionPlayerInfo[] getInteractions(int x, int y, int z){
+    public BaseBlockInfo[] getInteractions(int x, int y, int z){
         return getAreaAt(x, z).getInteractions((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE));
     }
 
-    public BlockInteractionPlayerInfo[] getInteractions(Position position){
+    public BaseBlockInfo[] getInteractions(Position position){
         return getInteractions((int) position.x, (int) position.y, (int) position.z);
     }
 
-    public void addInteractionAsync(int x, int y, int z, PlayerInteractionType type, String player){
-        getAreaAt(x, z).addInteractionAsync((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE), (byte) type.ordinal(), player);
+    public void addInteractionAsync(int x, int y, int z, PlayerInteractionType type, String player, int beforeBlock, int afterBlock){
+        getAreaAt(x, z).addInteractionAsync((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE),
+                (byte) type.ordinal(), player, (short) beforeBlock, (short) afterBlock);
     }
 
-    public void addInteractionAsync(Position position, PlayerInteractionType type, Player player){
-        addInteractionAsync((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName());
+    public void addInteractionAsync(Position position, PlayerInteractionType type, Player player, int beforeBlock, int afterBlock){
+        addInteractionAsync((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName(), beforeBlock, afterBlock);
     }
 
-    public BlockInteractionPlayerInfo[] getInteractionsAsync(int x, int y, int z){
+    public BaseBlockInfo[] getInteractionsAsync(int x, int y, int z){
         return getAreaAt(x, z).getInteractionsAsync((byte) (x % AreaDB.SIZE), (byte) (y % AreaDB.SIZE), (byte) (z % AreaDB.SIZE));
     }
 
-    public BlockInteractionPlayerInfo[] getInteractionsAsync(Position position){
+    public BaseBlockInfo[] getInteractionsAsync(Position position){
         return getInteractionsAsync((int) position.x, (int) position.y, (int) position.z);
     }
 
@@ -63,5 +66,11 @@ public class LevelDB {
         for(AreaDB area : ares.values())
             area.unload();
         ares.clear();
+    }
+
+    @Override
+    protected void finalize() throws Throwable {
+        unload();
+        super.finalize();
     }
 }

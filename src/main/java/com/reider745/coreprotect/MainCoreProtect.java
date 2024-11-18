@@ -2,31 +2,30 @@ package com.reider745.coreprotect;
 
 import cn.nukkit.Player;
 import cn.nukkit.Server;
-import cn.nukkit.block.Block;
+import cn.nukkit.command.CommandSender;
 import cn.nukkit.command.SimpleCommandMap;
 import cn.nukkit.event.EventHandler;
-import cn.nukkit.event.EventPriority;
-import cn.nukkit.event.Listener;
-import cn.nukkit.event.block.BlockBreakEvent;
 import cn.nukkit.event.level.LevelLoadEvent;
 import cn.nukkit.event.level.LevelUnloadEvent;
-import cn.nukkit.event.player.PlayerInteractEvent;
 import cn.nukkit.level.Level;
+import cn.nukkit.level.Position;
 import cn.nukkit.plugin.PluginBase;
-import com.reider745.coreprotect.api.BlockInteractionPlayerInfo;
 import com.reider745.coreprotect.api.LevelDB;
 import com.reider745.coreprotect.api.PlayerInteractionType;
+import com.reider745.coreprotect.api.description.BaseBlockInfo;
+import com.reider745.coreprotect.api.description.parser.BaseParserBlockInfo;
+import com.reider745.coreprotect.api.description.parser.ParserChangeBlockInfo;
+import com.reider745.coreprotect.commands.LedgerBlockListCommand;
 import com.reider745.coreprotect.commands.LedgerCommand;
+import com.reider745.coreprotect.commands.LedgerRadiusCommand;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MainCoreProtect extends PluginBase implements Listener {
+public class MainCoreProtect extends PluginBase {
     private final ConcurrentHashMap<Integer, LevelDB> levels = new ConcurrentHashMap<>();
     private final String bdDirectory;
     private final ConcurrentHashMap<Player, Boolean> ledgerEnabled = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Block> blockPreUse = new ConcurrentHashMap<>();
-    private final ConcurrentHashMap<String, Block> blockPlaceUse = new ConcurrentHashMap<>();
 
     public MainCoreProtect(){
         final File dir = new File("coreprotect");
@@ -36,11 +35,14 @@ public class MainCoreProtect extends PluginBase implements Listener {
 
     @Override
     public void onEnable() {
-        Server.getInstance().getPluginManager().registerEvents(this, this);
+        Server.getInstance().getPluginManager().registerEvents(new Events(this), this);
 
         final SimpleCommandMap map = Server.getInstance().getCommandMap();
+
         map.register(getName(), new LedgerCommand("l", this));
         map.register(getName(), new LedgerCommand("ledger", this));
+        map.register(getName(), new LedgerRadiusCommand("lr", this));
+        map.register(getName(), new LedgerBlockListCommand("test", this));
     }
 
     @Override
@@ -71,54 +73,29 @@ public class MainCoreProtect extends PluginBase implements Listener {
         return levelDB;
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onBreakBlock(BlockBreakEvent event){
-        final Player player = event.getPlayer();
-        final LevelDB levelDB = getLevel(player.level);
-
-        if(ledgerEnabled.getOrDefault(player, false)){
-            player.sendMessage("=====LIST=====");
-            for(BlockInteractionPlayerInfo info : levelDB.getInteractions(event.getBlock()))
-                player.sendMessage(info.toMessage());
-            event.setCancelled();
-        } else {
-            levelDB.addInteractionAsync(event.getBlock(), PlayerInteractionType.BREAK, player);
-        }
-    }
-
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onInteractHigh(PlayerInteractEvent event){
-        final Player player = event.getPlayer();
-        final LevelDB levelDB = getLevel(player.level);
-
-        if(ledgerEnabled.getOrDefault(player, false)){
-            player.sendMessage("=====LIST=====");
-            for(BlockInteractionPlayerInfo info : levelDB.getInteractions(event.getBlock()))
-                player.sendMessage(info.toMessage());
-            event.setCancelled();
-        }else{
-            blockPreUse.put(player.getDisplayName(), event.getBlock());
-            blockPlaceUse.put(player.getDisplayName(), event.getBlock().getSide(event.getFace()));
-        }
-    }
-
-    @EventHandler(priority = EventPriority.LOWEST)
-    public void onInteractLowest(PlayerInteractEvent event){
-        final Player player = event.getPlayer();
-        final LevelDB levelDB = getLevel(player.level);
-
-        if(!player.level.getBlock(event.getBlock()).equalsBlock(blockPreUse.remove(player.getDisplayName()))){
-            levelDB.addInteractionAsync(event.getBlock(), PlayerInteractionType.CHANGE, player);
-        }
-
-        if(!player.level.getBlock(event.getBlock()).equalsBlock(blockPlaceUse.remove(player.getDisplayName()))){
-            levelDB.addInteractionAsync(event.getBlock(), PlayerInteractionType.CHANGE, player);
-        }
-    }
-
     public boolean setChangedLedger(Player player) {
         final boolean current = ledgerEnabled.getOrDefault(player, false);
         ledgerEnabled.put(player, !current);
         return !current;
+    }
+
+    public boolean isLedgerEnabled(Player player) {
+        return ledgerEnabled.getOrDefault(player, false);
+    }
+
+    public boolean message(LevelDB levelDB, CommandSender sender, int x, int y, int z) {
+        final BaseBlockInfo[] infos = levelDB.getInteractions(x, y, z);
+        if(infos.length > 0) {
+            sender.sendMessage("§e=====" + x + " " + y + " " + z + "=====");
+            for (BaseBlockInfo info : infos)
+                sender.sendMessage(info.toMessage());
+            return true;
+        }
+
+        return false;
+    }
+
+    public boolean message(LevelDB levelDB, CommandSender sender, Position position) {
+        return message(levelDB, sender, position.getFloorX(), position.getFloorY(), position.getFloorZ());
     }
 }

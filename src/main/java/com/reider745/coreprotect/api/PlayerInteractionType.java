@@ -2,5 +2,7 @@ package com.reider745.coreprotect.api;
 
 public enum PlayerInteractionType {
     BREAK,
-    CHANGE
+    CHANGE,
+    PLACE,
+    MAX_VALUE
 }
