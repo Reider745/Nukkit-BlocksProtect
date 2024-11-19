@@ -1,7 +1,7 @@
-package com.reider745.coreprotect.api.description.parser;
+package com.reider745.blocks_protect.api.description.parser;
 
-import com.reider745.coreprotect.api.description.BaseBlockInfo;
-import com.reider745.coreprotect.api.description.ChangeBlockInfo;
+import com.reider745.blocks_protect.api.description.BaseBlockInfo;
+import com.reider745.blocks_protect.api.description.ChangeBlockInfo;
 
 import java.nio.ByteBuffer;
 

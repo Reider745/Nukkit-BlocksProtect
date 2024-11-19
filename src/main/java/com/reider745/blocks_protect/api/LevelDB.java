@@ -1,16 +1,16 @@
-package com.reider745.coreprotect.api;
+package com.reider745.blocks_protect.api;
 
 import cn.nukkit.Player;
 import cn.nukkit.level.Position;
 import com.mefrreex.jooq.database.SQLiteDatabase;
-import com.reider745.coreprotect.api.description.BaseBlockInfo;
+import com.reider745.blocks_protect.api.description.BaseBlockInfo;
 import org.jooq.impl.DSL;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class LevelDB {
-    private ConcurrentHashMap<Long, AreaDB> ares = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Long, AreaDB> ares = new ConcurrentHashMap<>();
     private final SQLiteDatabase database;
 
     public LevelDB(File dabaseFile){
@@ -19,6 +19,11 @@ public class LevelDB {
 
     private static Long hashPosition(int x, int z){
         return (((long)x) << 32) | (z & 0xffffffffL);
+    }
+
+    private String getPlayerName(Player player) {
+        if(player == null) return "";
+        return player.getDisplayName();
     }
 
     public AreaDB getAreaAt(int x, int z){
@@ -34,7 +39,7 @@ public class LevelDB {
     }
 
     public void addInteraction(Position position, PlayerInteractionType type, Player player, int beforeBlock, int afterBlock){
-        addInteraction((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName(), beforeBlock, afterBlock);
+        addInteraction((int) position.x, (int) position.y, (int) position.z, type, getPlayerName(player), beforeBlock, afterBlock);
     }
 
     public BaseBlockInfo[] getInteractions(int x, int y, int z){
@@ -51,7 +56,7 @@ public class LevelDB {
     }
 
     public void addInteractionAsync(Position position, PlayerInteractionType type, Player player, int beforeBlock, int afterBlock){
-        addInteractionAsync((int) position.x, (int) position.y, (int) position.z, type, player.getDisplayName(), beforeBlock, afterBlock);
+        addInteractionAsync((int) position.x, (int) position.y, (int) position.z, type, getPlayerName(player), beforeBlock, afterBlock);
     }
 
     public BaseBlockInfo[] getInteractionsAsync(int x, int y, int z){

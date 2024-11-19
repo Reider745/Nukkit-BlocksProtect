@@ -1,8 +1,8 @@
-package com.reider745.coreprotect.api;
+package com.reider745.blocks_protect.api;
 
 import com.mefrreex.jooq.database.IDatabase;
-import com.reider745.coreprotect.api.description.BaseBlockInfo;
-import com.reider745.coreprotect.api.description.parser.BaseParserBlockInfo;
+import com.reider745.blocks_protect.api.description.BaseBlockInfo;
+import com.reider745.blocks_protect.api.description.parser.BaseParserBlockInfo;
 import org.jooq.*;
 import org.jooq.Record;
 import org.jooq.impl.DSL;
@@ -68,6 +68,7 @@ public class AreaDB {
 
         final ByteBuffer buffer = ByteBuffer.allocate(length + parser.length(player));
         buffer.put(bytes);
+        buffer.putInt(0, buffer.getInt(0) + 1);
 
         parser.encode(buffer, length, type, player, beforeBlock, afterBlock);
 

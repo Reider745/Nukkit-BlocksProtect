@@ -1,7 +1,7 @@
-name: "Nukkit-CoreProtect"
+name: "BlocksProtect"
 version: "alpha 1.0"
 api: ["1.0.13"]
 author: Reider745
-main: com.reider745.coreprotect.MainCoreProtect
+main: com.reider745.blocks_protect.MainBlocksProtect
 softdepend:
   - "JOOQConnector-Nukkit-1.0.1"

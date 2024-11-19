@@ -1,4 +1,4 @@
-package com.reider745.coreprotect.commands;
+package com.reider745.blocks_protect.commands;
 
 import cn.nukkit.Player;
 import cn.nukkit.Server;
@@ -6,22 +6,21 @@ import cn.nukkit.command.Command;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.level.Position;
 import cn.nukkit.scheduler.AsyncTask;
-import com.reider745.coreprotect.MainCoreProtect;
-import com.reider745.coreprotect.api.LevelDB;
+import com.reider745.blocks_protect.MainBlocksProtect;
+import com.reider745.blocks_protect.api.LevelDB;
 
-public class LedgerRadiusCommand extends Command {
-    private final MainCoreProtect main;
+public class InspectRadiusCommand extends Command {
+    private final MainBlocksProtect main;
 
-    public LedgerRadiusCommand(String name, MainCoreProtect main) {
+    public InspectRadiusCommand(String name, MainBlocksProtect main) {
         super(name, "get information for radius");
+        this.setPermission("block_protect.inspect_radius");
         this.main = main;
     }
 
     @Override
     public boolean execute(CommandSender sender, String commandLabel, String[] args) {
-        final Player player = sender.asPlayer();
-
-        if(sender.isOp() && sender.isPlayer() && player != null){
+        if(sender.hasPermission(getPermission()) && sender instanceof Player player){
             final Position position = player.getPosition();
             final LevelDB levelDB = main.getLevel(player.getLevel());
 

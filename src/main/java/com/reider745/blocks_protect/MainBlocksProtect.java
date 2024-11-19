@@ -1,55 +1,64 @@
-package com.reider745.coreprotect;
+package com.reider745.blocks_protect;
 
 import cn.nukkit.Player;
 import cn.nukkit.Server;
 import cn.nukkit.command.CommandSender;
 import cn.nukkit.command.SimpleCommandMap;
 import cn.nukkit.event.EventHandler;
+import cn.nukkit.event.Listener;
 import cn.nukkit.event.level.LevelLoadEvent;
 import cn.nukkit.event.level.LevelUnloadEvent;
 import cn.nukkit.level.Level;
 import cn.nukkit.level.Position;
 import cn.nukkit.plugin.PluginBase;
-import com.reider745.coreprotect.api.LevelDB;
-import com.reider745.coreprotect.api.PlayerInteractionType;
-import com.reider745.coreprotect.api.description.BaseBlockInfo;
-import com.reider745.coreprotect.api.description.parser.BaseParserBlockInfo;
-import com.reider745.coreprotect.api.description.parser.ParserChangeBlockInfo;
-import com.reider745.coreprotect.commands.LedgerBlockListCommand;
-import com.reider745.coreprotect.commands.LedgerCommand;
-import com.reider745.coreprotect.commands.LedgerRadiusCommand;
+import com.reider745.blocks_protect.api.LevelDB;
+import com.reider745.blocks_protect.api.description.BaseBlockInfo;
+import com.reider745.blocks_protect.commands.InspectCommand;
+import com.reider745.blocks_protect.commands.InspectRadiusCommand;
+import com.reider745.blocks_protect.events.*;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MainCoreProtect extends PluginBase {
+public class MainBlocksProtect extends PluginBase {
     private final ConcurrentHashMap<Integer, LevelDB> levels = new ConcurrentHashMap<>();
     private final String bdDirectory;
-    private final ConcurrentHashMap<Player, Boolean> ledgerEnabled = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<Player, Boolean> inspectEnabled = new ConcurrentHashMap<>();
 
-    public MainCoreProtect(){
-        final File dir = new File("coreprotect");
+    public MainBlocksProtect(){
+        final File dir = new File("blocks_protect");
         dir.mkdir();
         bdDirectory = dir.getAbsolutePath();
     }
 
+    public void registerEvents(Listener listener) {
+        final Server server = getServer();
+        try {
+            server.getPluginManager().registerEvents(listener, this);
+        }catch (Throwable e) {
+            server.getLogger().warning("Error loaded, " + listener.getClass());
+        }
+    }
+
     @Override
     public void onEnable() {
-        Server.getInstance().getPluginManager().registerEvents(new Events(this), this);
+        registerEvents(new BreakBlockEvent(this));
+        registerEvents(new InteractEvent(this));
+        registerEvents(new PlaceEvent(this));
+        registerEvents(new BlockExplosionEvent(this));
+        registerEvents(new EntityExplosionEvent(this));
 
         final SimpleCommandMap map = Server.getInstance().getCommandMap();
 
-        map.register(getName(), new LedgerCommand("l", this));
-        map.register(getName(), new LedgerCommand("ledger", this));
-        map.register(getName(), new LedgerRadiusCommand("lr", this));
-        map.register(getName(), new LedgerBlockListCommand("test", this));
+        map.register(getName(), new InspectCommand("inspect", this));
+        map.register(getName(), new InspectRadiusCommand("inspectr", this));
     }
 
     @Override
     public void onDisable() {
         for(LevelDB level : levels.values())
             level.unload();
-        ledgerEnabled.clear();
+        inspectEnabled.clear();
     }
 
     @EventHandler
@@ -73,14 +82,14 @@ public class MainCoreProtect extends PluginBase {
         return levelDB;
     }
 
-    public boolean setChangedLedger(Player player) {
-        final boolean current = ledgerEnabled.getOrDefault(player, false);
-        ledgerEnabled.put(player, !current);
+    public boolean setChangedInspect(Player player) {
+        final boolean current = inspectEnabled.getOrDefault(player, false);
+        inspectEnabled.put(player, !current);
         return !current;
     }
 
-    public boolean isLedgerEnabled(Player player) {
-        return ledgerEnabled.getOrDefault(player, false);
+    public boolean isInspectEnabled(Player player) {
+        return inspectEnabled.getOrDefault(player, false);
     }
 
     public boolean message(LevelDB levelDB, CommandSender sender, int x, int y, int z) {

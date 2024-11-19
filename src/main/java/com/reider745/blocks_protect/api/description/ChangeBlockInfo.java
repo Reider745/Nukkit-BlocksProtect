@@ -1,4 +1,4 @@
-package com.reider745.coreprotect.api.description;
+package com.reider745.blocks_protect.api.description;
 
 import cn.nukkit.block.Block;
 

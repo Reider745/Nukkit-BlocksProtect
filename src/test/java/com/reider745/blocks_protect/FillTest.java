@@ -1,8 +1,8 @@
-package com.reider745.coreprotect;
+package com.reider745.blocks_protect;
 
 import com.mefrreex.jooq.JOOQConnector;
-import com.reider745.coreprotect.api.LevelDB;
-import com.reider745.coreprotect.api.PlayerInteractionType;
+import com.reider745.blocks_protect.api.LevelDB;
+import com.reider745.blocks_protect.api.PlayerInteractionType;
 
 import java.io.File;
 import java.util.Arrays;

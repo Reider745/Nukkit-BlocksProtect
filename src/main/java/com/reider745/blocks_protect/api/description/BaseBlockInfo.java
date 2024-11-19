@@ -1,8 +1,8 @@
-package com.reider745.coreprotect.api.description;
+package com.reider745.blocks_protect.api.description;
 
-import com.reider745.coreprotect.api.PlayerInteractionType;
-import com.reider745.coreprotect.api.description.parser.BaseParserBlockInfo;
-import com.reider745.coreprotect.api.description.parser.ParserChangeBlockInfo;
+import com.reider745.blocks_protect.api.PlayerInteractionType;
+import com.reider745.blocks_protect.api.description.parser.BaseParserBlockInfo;
+import com.reider745.blocks_protect.api.description.parser.ParserChangeBlockInfo;
 
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -53,5 +53,7 @@ public class BaseBlockInfo {
         BaseBlockInfo.registerParser(PlayerInteractionType.BREAK, new BaseParserBlockInfo());
         BaseBlockInfo.registerParser(PlayerInteractionType.CHANGE, new ParserChangeBlockInfo());
         BaseBlockInfo.registerParser(PlayerInteractionType.PLACE, new ParserChangeBlockInfo());
+        BaseBlockInfo.registerParser(PlayerInteractionType.EXPLOSION_BLOCK, new ParserChangeBlockInfo());
+        BaseBlockInfo.registerParser(PlayerInteractionType.EXPLOSION_ENTITY, new ParserChangeBlockInfo());
     }
 }

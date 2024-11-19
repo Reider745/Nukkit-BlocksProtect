@@ -8,17 +8,20 @@ repositories {
     maven {
         url = "https://jitpack.io"
     }
+    maven {
+        url = "https://repo.lanink.cn/repository/maven-public/"
+    }
+    maven {
+        url = "https://repo.opencollab.dev/maven-snapshots/"
+    }
 }
 
 dependencies {
-    compileOnly files("target/server.jar")
-    compileOnly files("target/plugins/JOOQConnector-Nukkit-1.0.1.jar")
-}
+    compileOnly 'com.github.MEFRREEX:JOOQConnector:1.0.1'
+    compileOnly group: 'org.jooq', name: 'jooq', version: '3.19.15'
+    compileOnly 'cn.nukkit:Nukkit:MOT-SNAPSHOT'
 
-test {
-    dependencies {
-        implementation 'com.github.MEFRREEX:JOOQConnector:1.0.1'
-    }
+    testImplementation 'com.github.MEFRREEX:JOOQConnector:1.0.1'
 }
 
 def targetJavaVersion = 17
